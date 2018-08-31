@@ -1,50 +1,70 @@
-class Auction {
-  constructor(db) {
-    this.db = db;
-    this._tableName = 'auction';
+const db = require('../db');
 
-    this.create();
-  }
+const TABLE = 'auction';
 
-  create() {
-    const sql = `CREATE TABLE IF NOT EXISTS ${this._tableName} (
-      id INT PRIMARY KEY AUTOINCREMENT,
-      itemId INT,
-      bid INT,
-      buyout INT,
-      quantity INT,
-    )`;
+const create = () => {
+  const sql = `CREATE TABLE IF NOT EXISTS ${TABLE} (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    itemId INTEGER,
+    bid INTEGER,
+    buyout INTEGER,
+    quantity INTEGER
+  )`;
 
-    return this.db.run(sql);
-  }
+  return db.run(sql);
+};
 
-  drop() {
-    return this.db.run(`DROP TABLE IF EXISTS ${this._tableName}`);
-  }
-
-  insert(values) {
-    return this.db.run(`INSERT INTO ${this._tableName} (name) VALUES ($name)`, values);
-  }
-
-  async insertMany(values = []) {
-    
-  }
-
-  update(values) {
-    return this.db.run(`UPDATE ${this._tableName} SET name = $name WHERE id = $id`, values);
-  }
-
-  remove(id) {
-    return this.db.run(`DELETE FROM ${this._tableName} WHERE id = $id`, { $id: id });
-  }
-
-  getAll() {
-    return this.db.all(`SELECT * FROM ${this._tableName}`);
-  }
-
-  getById(id) {
-    return this.db.get(`SELECT * FROM ${this._tableName} WHERE id = $id`, { $id: id });
-  }
+const drop = () => {
+  return db.run(`DROP TABLE IF EXISTS ${TABLE}`);
 }
 
-module.exports = Auction;
+const insert = (values) => {
+  const sql = `INSERT INTO ${TABLE}
+    (itemId, bid, buyout, quantity)
+    VALUES
+    ($itemId, $bid, $buyout, $quantity)
+  `;
+
+  return db.run(sql, values);
+};
+
+const insertMany = async (values) => {
+  try {
+    await db.run('BEGIN TRANSACTION');
+
+    for (const value of values) {
+      await insert(value);
+    }
+
+    await db.run('COMMIT');
+  } catch (err) {
+    await db.run('ROLLBACK');
+  }
+};
+
+const update = (values) => {
+  return db.run(`UPDATE ${TABLE} SET name = $name WHERE id = $id`, values);
+};
+
+const remove = (id) => {
+  return db.run(`DELETE FROM ${TABLE} WHERE id = $id`, { $id: id });
+};
+
+const getAll = () => {
+  return db.all(`SELECT * FROM ${TABLE}`);
+}
+
+const getById = (id) => {
+  return db.get(`SELECT * FROM ${TABLE} WHERE id = $id`, { $id: id });
+};
+
+module.exports = {
+  create,
+  drop,
+  insert,
+  insertMany,
+  update,
+  remove,
+  getAll,
+  getById,
+};

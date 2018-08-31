@@ -1,15 +1,5 @@
-const db = require('./db');
+const auction = require('./auction');
 
-const Auction = require('./auction');
-
-const repositories = {
-  async initialize() {
-    await db.connect();
-
-    return {
-      auction: new Auction(db),
-    };
-  },
+module.exports = {
+  auction,
 };
-
-module.exports = repositories;
